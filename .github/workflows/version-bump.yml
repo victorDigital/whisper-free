@@ -12,6 +12,11 @@ on:
           - patch
           - minor
           - major
+  #also on merge into main
+  push:
+    branches:
+      - main
+    types: [push]
 
 jobs:
   bump-version:

@@ -1,13 +1,59 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
+  import { check } from "@tauri-apps/plugin-updater";
+  import { relaunch } from "@tauri-apps/plugin-process";
 
   let name = $state("");
   let greetMsg = $state("");
+  let updateStatus = $state("");
+  let updateAvailable = $state(false);
+  let isUpdating = $state(false);
 
   async function greet(event: Event) {
     event.preventDefault();
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
     greetMsg = await invoke("greet", { name });
+  }
+
+  async function checkForUpdate() {
+    try {
+      updateStatus = "Checking for updates...";
+      const update = await check();
+      if (update) {
+        updateAvailable = true;
+        updateStatus = `Update available: v${update.version}`;
+      } else {
+        updateStatus = "You're on the latest version!";
+      }
+    } catch (e) {
+      updateStatus = `Update check failed: ${e}`;
+    }
+  }
+
+  async function installUpdate() {
+    try {
+      isUpdating = true;
+      updateStatus = "Downloading update...";
+      const update = await check();
+      if (update) {
+        await update.downloadAndInstall((event) => {
+          switch (event.event) {
+            case 'Started':
+              updateStatus = `Downloading... (${event.data.contentLength} bytes)`;
+              break;
+            case 'Progress':
+              updateStatus = `Downloading...`;
+              break;
+            case 'Finished':
+              updateStatus = "Download complete. Restarting...";
+              break;
+          }
+        });
+        await relaunch();
+      }
+    } catch (e) {
+      updateStatus = `Update failed: ${e}`;
+      isUpdating = false;
+    }
   }
 </script>
 
@@ -32,6 +78,19 @@
     <button type="submit">Greet</button>
   </form>
   <p>{greetMsg}</p>
+
+  <div class="update-section">
+    {#if !updateAvailable}
+      <button onclick={checkForUpdate}>Check for Updates</button>
+    {:else}
+      <button onclick={installUpdate} disabled={isUpdating}>
+        {isUpdating ? 'Updating...' : 'Install Update'}
+      </button>
+    {/if}
+    {#if updateStatus}
+      <p class="update-status">{updateStatus}</p>
+    {/if}
+  </div>
 </main>
 
 <style>
@@ -131,6 +190,17 @@ button {
 
 #greet-input {
   margin-right: 5px;
+}
+
+.update-section {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.update-status {
+  font-size: 0.9em;
+  opacity: 0.8;
 }
 
 @media (prefers-color-scheme: dark) {

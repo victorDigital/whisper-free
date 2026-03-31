@@ -49,7 +49,7 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: 'whisper-free v__VERSION__'
-          releaseBody: 'See the assets to download and install this version.'
+          releaseBody: 'See the assets to download and install this version.\n\n> **macOS users:** If you see *"Apple could not verify this app"*, right-click the app and choose **Open**, then click **Open** in the dialog. You only need to do this once.'
           releaseDraft: false
           prerelease: false
           args: '--target universal-apple-darwin'

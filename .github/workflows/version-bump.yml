@@ -12,20 +12,22 @@ on:
           - patch
           - minor
           - major
-  #also on merge into main
-  push:
+  # bump on pr merge to main (merge fires pull_request with action closed)
+  pull_request:
     branches:
       - main
-    types: [push]
+    types: [closed]
 
 jobs:
   bump-version:
+    if: github.event_name != 'pull_request' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get current version
@@ -37,9 +39,16 @@ jobs:
 
       - name: Calculate next version
         id: next
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_BUMP: ${{ inputs.bump }}
         run: |
           IFS='.' read -r MAJOR MINOR PATCH <<< "${{ steps.current.outputs.version }}"
-          BUMP="${{ inputs.bump }}"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            BUMP="$INPUT_BUMP"
+          else
+            BUMP="patch"
+          fi
 
           if [ "$BUMP" = "major" ]; then
             MAJOR=$((MAJOR + 1))

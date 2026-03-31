@@ -2,6 +2,7 @@
   import { check } from "@tauri-apps/plugin-updater";
   import { relaunch } from "@tauri-apps/plugin-process";
   import WhisperManager from "$lib/WhisperManager.svelte";
+  import VoiceDictation from "$lib/VoiceDictation.svelte";
 
   let updateStatus = $state("");
   let updateAvailable = $state(false);
@@ -52,6 +53,7 @@
 
 <main class="container">
   <WhisperManager />
+  <VoiceDictation />
 
   <div class="update-section">
     {#if !updateAvailable}

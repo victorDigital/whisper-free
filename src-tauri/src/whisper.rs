@@ -463,7 +463,7 @@ pub async fn whisper_start_server(
     let (mut rx, child) = app
         .shell()
         .command(binary.to_string_lossy().as_ref())
-        .args(["-m", &model_str, "--port", &port_str, "--host", "127.0.0.1"])
+        .args(["-m", &model_str, "--port", &port_str, "--host", "127.0.0.1", "--convert"])
         .current_dir(wdir)
         .env("PATH", enhanced_path())
         .spawn()
